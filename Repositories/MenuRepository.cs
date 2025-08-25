@@ -5,13 +5,9 @@ using resturangApi.Repositories.Interface;
 
 namespace resturangApi.Repositories
 {
-    public class MenuRepository : IMenuRepository
+    public class MenuRepository(ResturangApiDbContext context) : IMenuRepository
     {
-        private readonly ResturangApiDbContext _context;
-        public MenuRepository(ResturangApiDbContext context) 
-        {
-            _context = context;
-        }
+        private readonly ResturangApiDbContext _context = context;
 
         public async Task<List<Menu>> GetAllMenusAsync()
         {

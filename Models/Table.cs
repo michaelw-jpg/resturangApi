@@ -12,7 +12,8 @@ namespace resturangApi.Models
         [Required]
         public int Seats { get; set; }
 
-        public ICollection<Booking>? Bookings { get; set; }
+        public ICollection<Booking>? Bookings { get; set; } = new List<Booking>();
 
+       
     }
 }

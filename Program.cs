@@ -1,6 +1,11 @@
 
 using Microsoft.EntityFrameworkCore;
 using resturangApi.Data;
+using resturangApi.Mappers;
+using resturangApi.Repositories;
+using resturangApi.Repositories.Interface;
+using resturangApi.Services;
+using resturangApi.Services.Iservices;
 
 namespace resturangApi
 {
@@ -22,6 +27,15 @@ namespace resturangApi
                 {
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
                 });
+
+
+            builder.Services.AddScoped<IGenericRepository, GenericRepository>();
+            builder.Services.AddScoped<IMenuRepository, MenuRepository>();
+            builder.Services.AddScoped<ITableRepository, TableRepository>();
+            builder.Services.AddScoped<ITableService, TableService>();
+            builder.Services.AddScoped<IGenericItemService, GenericItemService>();
+            
+       
 
             var app = builder.Build();
 

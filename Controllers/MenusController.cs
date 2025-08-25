@@ -9,18 +9,21 @@ using resturangApi.Data;
 using resturangApi.Dto.MenuDtos;
 using resturangApi.Models;
 using resturangApi.Repositories.Interface;
+using resturangApi.Services.Iservices;
 
 namespace resturangApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MenusController : ControllerBase
+    public class menusController : ControllerBase
     {
         private readonly IGenericRepository _repo;
+        private readonly IGenericItemService _GenericService;
 
-        public MenusController(IGenericRepository repo)
+        public menusController(IGenericRepository repo, IGenericItemService _genericService)
         {
             _repo = repo;
+            _GenericService = _genericService;
         }
 
         // GET: api/Menus
@@ -50,7 +53,7 @@ namespace resturangApi.Controllers
         public async Task<IActionResult> PatchMenu(int id, [FromBody]PatchMenuDto request)
         {
             
-            var result = await _repo.UpdateItem<Menu,PatchMenuDto>(id, request);
+            var result = await _GenericService.UpdateItem<Menu,PatchMenuDto>(id, request);
             if (result == null)
             {
                 return NotFound();
@@ -62,33 +65,28 @@ namespace resturangApi.Controllers
         // POST: api/Menus
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Menu>> PostMenu(Menu menu)
+        public async Task<ActionResult<Menu>> PostMenu(CreateMenuDto menu)
         {
-            _context.Menus.Add(menu);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetMenu", new { id = menu.MenuId }, menu);
+            var result = await _GenericService.CreateItem<Menu, CreateMenuDto>(menu);
+            if (result == null)
+            {
+                return BadRequest();
+            }
+            return CreatedAtAction("GetMenu", new { id = result.MenuId }, menu);
         }
 
         // DELETE: api/Menus/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMenu(int id)
         {
-            var menu = await _context.Menus.FindAsync(id);
-            if (menu == null)
+           var result = await _GenericService.DeleteItem<Menu>(id);
+
+            if (!result)
             {
                 return NotFound();
             }
-
-            _context.Menus.Remove(menu);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok("Item Removed");
         }
 
-        private bool MenuExists(int id)
-        {
-            return _context.Menus.Any(e => e.MenuId == id);
-        }
     }
 }

@@ -5,7 +5,7 @@ namespace resturangApi.Repositories.Interface
     public interface IMenuRepository
     {
         Task<List<Menu>> GetAllMenusAsync();
-        Task<Menu> GetMenuByIdAsync();
+        Task<Menu> GetMenuByIdAsync(int id);
         Task<Menu> CreateMenuAsync(Menu menu);
         Task<Menu> UpdateMenuAsync(Menu menu);
         Task<bool> DeleteMenuAsync(int id);

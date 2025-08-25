@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace resturangApi.Models
+namespace resturangApi.Dto.UserDtos
 {
-    public class User
+    public class CreateUserDto
     {
-        [Key]
-        public Guid UserId { get; set; }
 
         [Required]
         public string Name { get; set; }

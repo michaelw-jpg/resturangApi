@@ -1,38 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using resturangApi.Data;
+using resturangApi.Dto.BookingDtos;
 using resturangApi.Models;
+using resturangApi.Repositories.Interface;
+using resturangApi.Services;
+using resturangApi.Services.Iservices;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace resturangApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BookingsController : ControllerBase
+    public class BookingsController(IGenericRepository repo, IGenericItemService service,
+        IBookingService bookingService) : ControllerBase
     {
-        private readonly ResturangApiDbContext _context;
-
-        public BookingsController(ResturangApiDbContext context)
-        {
-            _context = context;
-        }
+        private readonly IGenericRepository _repo = repo;
+        private readonly IGenericItemService _service = service;
+        private readonly IBookingService _bookingService = bookingService;
 
         // GET: api/Bookings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
-            return await _context.Bookings.ToListAsync();
+            return await _repo.GetAll<Booking>();
         }
 
         // GET: api/Bookings/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            var booking = await _repo.GetItemByID<Booking>(id);
 
             if (booking == null)
             {
@@ -44,65 +46,49 @@ namespace resturangApi.Controllers
 
         // PUT: api/Bookings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutBooking(int id, Booking booking)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchBooking(int id, PatchBookingDto booking)
         {
-            if (id != booking.BookingId)
+           var result = await _service.UpdateItem<Booking, PatchBookingDto>(id, booking);
+
+            if (result == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(booking).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookingExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(booking);
         }
 
         // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Booking>> PostBooking(Booking booking)
+        public async Task<ActionResult<Booking>> PostBooking(CreateBookingDto booking)
         {
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBooking", new { id = booking.BookingId }, booking);
+            // look to add some logic that returns a list of available tables if the selected one is not available
+            //look to add logic that checks if the customer exists
+            
+            var result = await _bookingService.CreateBookingAsync(booking);
+            if (result == null)
+            {
+                return BadRequest("Table is not available for the selected time and date.");
+            }
+
+            return CreatedAtAction("GetBooking", new { id = result.BookingId }, booking);
         }
 
         // DELETE: api/Bookings/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(int id)
         {
-            var booking = await _context.Bookings.FindAsync(id);
-            if (booking == null)
+            var booking = await _service.DeleteItem<Booking>(id);
+            if (booking == false)
             {
                 return NotFound();
             }
 
-            _context.Bookings.Remove(booking);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok("Booking Deleted");
         }
 
-        private bool BookingExists(int id)
-        {
-            return _context.Bookings.Any(e => e.BookingId == id);
-        }
     }
 }

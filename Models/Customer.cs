@@ -5,6 +5,7 @@ namespace resturangApi.Models
 {
     public class Customer
     {
+        //this is for later so eventually customers can login and see/handle their own bookings
         [Key]
         public int CustomerId { get; set; }
 
@@ -15,10 +16,19 @@ namespace resturangApi.Models
        
         [Required, Phone(ErrorMessage = "Invalid Phone number")]
         [MaxLength(18)]
-        public string? PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; }
 
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         [MaxLength(50)]
+        public string? Email { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        // Indicates if the customer is registered or wants to be a guest user
+        //for later when customers can login and see/handle their own bookings
+        public bool IsRegistered { get; set; }
 
         public ICollection<Booking>? Bookings { get; set; }
     }

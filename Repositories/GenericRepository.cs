@@ -5,20 +5,17 @@ using resturangApi.Repositories.Interface;
 
 namespace resturangApi.Repositories
 {
-    public class GenericRepository : IGenericRepository
+    public class GenericRepository(ResturangApiDbContext context) : IGenericRepository
     {
-        private readonly ResturangApiDbContext _context;
-        public GenericRepository(ResturangApiDbContext context)
-        {
-            _context = context;
-        }
+        private readonly ResturangApiDbContext _context = context;
+
         public async Task<List<TEntity>> GetAll<TEntity>() where TEntity : class
         {
             var items = await _context.Set<TEntity>().ToListAsync();
             return items;
         }
 
-        public async Task<TEntity> GetItemByID<TEntity>(int id) where TEntity : class
+        public async Task<TEntity> GetItemByID<TEntity>(object id) where TEntity : class
         {
             return await _context.Set<TEntity>().FindAsync(id);
 
@@ -41,11 +38,11 @@ namespace resturangApi.Repositories
             {
                 return null;
             }
-            GenericPatchMapper.ApplyPatch(entity, dto);
+            GenericMapper.ApplyPatch(entity, dto);
             await _context.SaveChangesAsync();
             return entity;
         }
-        public async Task<bool> DeleteItem<TEntity>(int id) where TEntity : class
+        public async Task<bool> DeleteItem<TEntity>(object id) where TEntity : class
         {
             var entity = await GetItemByID<TEntity>(id);
             if (entity == null)

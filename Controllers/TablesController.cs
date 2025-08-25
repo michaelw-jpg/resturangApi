@@ -6,33 +6,54 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using resturangApi.Data;
+using resturangApi.Dto.TablesDtos;
 using resturangApi.Models;
+using resturangApi.Repositories.Interface;
+using resturangApi.Services.Iservices;
 
 namespace resturangApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TablesController : ControllerBase
+    public class TablesController(IGenericRepository repo, IGenericItemService service, ITableService tableService) : ControllerBase
     {
-        private readonly ResturangApiDbContext _context;
-
-        public TablesController(ResturangApiDbContext context)
-        {
-            _context = context;
-        }
+        private readonly IGenericRepository _repo = repo;
+        private readonly IGenericItemService _service = service;
+        private readonly ITableService _tableService = tableService;
 
         // GET: api/Tables
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Table>>> GetTables()
         {
-            return await _context.Tables.ToListAsync();
+            var tables = await _repo.GetAll<Table>();
+            return Ok(tables);
+        }
+
+        [HttpGet("availabletables")]
+        public async Task<ActionResult<IEnumerable<Table>>> GetAvailableTables(DateTime date, int guests)
+        {
+            var tables = await _tableService.GetAllAvailableTables(date, guests);
+            
+            return Ok(tables);
+        }
+
+        
+        [HttpGet("availabletablebyid")]
+        public async Task<ActionResult<Table>> GetAvailableTableById(DateTime date, int guests, int tableId)
+        {
+            var table = await _tableService.GetAvailableTableById(date, guests, tableId);
+            if (table == null)
+            {
+                return NotFound("Table is not available");
+            }
+            return Ok(table);
         }
 
         // GET: api/Tables/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Table>> GetTable(int id)
         {
-            var table = await _context.Tables.FindAsync(id);
+            var table = await _repo.GetItemByID<Table>(id);
 
             if (table == null)
             {
@@ -44,65 +65,41 @@ namespace resturangApi.Controllers
 
         // PUT: api/Tables/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTable(int id, Table table)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchTable(int id, [FromBody]PatchTableDto Dto)
         {
-            if (id != table.TableId)
+            var result = await _service.UpdateItem<Table, PatchTableDto>(id, Dto);
+            if (result == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(table).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TableExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(result);
         }
 
         // POST: api/Tables
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Table>> PostTable(Table table)
+        public async Task<ActionResult<Table>> PostTable(CreateTableDto table)
         {
-            _context.Tables.Add(table);
-            await _context.SaveChangesAsync();
+            var result = await _service.CreateItem<Table, CreateTableDto>(table);
 
-            return CreatedAtAction("GetTable", new { id = table.TableId }, table);
+            return CreatedAtAction("GetTable", new { id = result.TableId }, table);
         }
 
         // DELETE: api/Tables/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTable(int id)
         {
-            var table = await _context.Tables.FindAsync(id);
-            if (table == null)
+           var result = await _service.DeleteItem<Table>(id);
+              if (!result)
             {
                 return NotFound();
             }
 
-            _context.Tables.Remove(table);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok("Item Removed");
         }
 
-        private bool TableExists(int id)
-        {
-            return _context.Tables.Any(e => e.TableId == id);
-        }
+      
     }
 }

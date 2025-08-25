@@ -6,103 +6,84 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using resturangApi.Data;
+using resturangApi.Dto.UserDtos;
 using resturangApi.Models;
+using resturangApi.Repositories.Interface;
+using resturangApi.Services.Iservices;
 
 namespace resturangApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class usersController : ControllerBase
+    public class UsersController(IGenericRepository repo, IGenericItemService service) : ControllerBase
     {
-        private readonly ResturangApiDbContext _context;
-
-        public usersController(ResturangApiDbContext context)
-        {
-            _context = context;
-        }
+        private readonly IGenericRepository _repo = repo;
+        private readonly IGenericItemService _service = service;
 
         // GET: api/users
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<user>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            return await _repo.GetAll<User>();
         }
 
         // GET: api/users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<user>> Getuser(Guid id)
+        public async Task<ActionResult<User>> Getuser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _repo.GetItemByID<User>(id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return user;
+            return Ok(user);
         }
 
         // PUT: api/users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Putuser(Guid id, user user)
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchUser(Guid id, PatchUserDto dto)
         {
-            if (id != user.userId)
+            //need logic here to hash password if password is being updated
+            var result = await _service.UpdateItem<User, PatchUserDto>(id, dto);
+            
+            if (result == null)
             {
-                return BadRequest();
+                return NotFound();
             }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!userExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(result);
         }
 
         // POST: api/users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<user>> Postuser(user user)
+        public async Task<ActionResult<User>> Postuser(CreateUserDto user)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            //need logic here to hash password
+            var result = await _service.CreateItem<User, CreateUserDto>(user);
 
-            return CreatedAtAction("Getuser", new { id = user.userId }, user);
+            if (result == null)
+            {
+                return BadRequest("Could not create user");
+            }
+            //need to setup dto that does not return password hash
+            return CreatedAtAction("Getuser", new { id = result.UserId }, user);
         }
 
         // DELETE: api/users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> Deleteuser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
+            var result = await _service.DeleteItem<User>(id);
+            if (result == false)
             {
                 return NotFound();
             }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return Ok("User deleted");
         }
 
-        private bool userExists(Guid id)
-        {
-            return _context.Users.Any(e => e.userId == id);
-        }
+        
     }
 }
