@@ -66,8 +66,8 @@ namespace resturangApi.Controllers
         {
 
             // look to add some logic that returns a list of available tables if the selected one is not available
-            //look to add logic that checks if the customer exists
-            
+            //later add logic here to add book table with guest customer or registered customer and make sure we have either guest info (in booking dto) or customer_FK
+
             var result = await _bookingService.CreateBookingAsync(booking);
             if (result == null)
             {

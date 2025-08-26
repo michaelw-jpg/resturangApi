@@ -25,10 +25,7 @@ namespace resturangApi.Models
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
-        // Indicates if the customer is registered or wants to be a guest user
-        //for later when customers can login and see/handle their own bookings
-        public bool IsRegistered { get; set; }
+   
 
         public ICollection<Booking>? Bookings { get; set; }
     }

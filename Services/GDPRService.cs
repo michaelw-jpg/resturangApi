@@ -74,18 +74,14 @@ namespace resturangApi.Services
                 foreach (var booking in bookingsToAnonymize)
                 {
                   
-                    var customer = booking.Customer;
+                   if( booking.CustomerId_FK == null) 
+                        continue; //if customerID is null skip to next becouse they are registered
 
-                    if (customer.IsRegistered)
-                    {
-                        continue; // Skip anonymization for registered customers
-                    }
+                    booking.Name = "Anonymized";
+                    booking.PhoneNumber = "Anonymized";
 
-                    customer.Name = "Anonymized";
-                    customer.PhoneNumber = "Anonymized";
-                    customer.Email = "Anonymized";
                     
-                    await _genericItemService.UpdateItem<Customer, Customer>(customer.CustomerId, customer);
+                    await _genericItemService.UpdateItem<Booking, Booking>(booking.BookingId, booking);
                     Console.WriteLine($"Anonymized booking with ID: {booking.BookingId}");
                 }
             }

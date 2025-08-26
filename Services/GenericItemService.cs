@@ -14,6 +14,11 @@ namespace resturangApi.Services
             return await _repo.GetAll<TEntity>();
         }
 
+        public async Task<TEntity> GetItemByID<TEntity>(object id) where TEntity : class
+        {             
+            return await _repo.GetItemByID<TEntity>(id);
+        }
+
         public async Task<TEntity> CreateItem<TEntity, TDto>(TDto dto)
             where TEntity : class
             where TDto : class

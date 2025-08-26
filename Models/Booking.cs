@@ -8,11 +8,24 @@ namespace resturangApi.Models
         [Key]
         public int BookingId { get; set; }
 
-        [Required]
-        [ForeignKey("Customer")]
-        public int CustomerId_FK { get; set; }
 
-        public virtual Customer Customer { get; set; }
+        //this is for later so eventually customers can login and see/handle their own bookings
+        [ForeignKey("Customer")]
+        public int? CustomerId_FK { get; set; }
+
+        public virtual Customer? Customer { get; set; }
+
+        // For guest users who do not have a Customer record
+        [MaxLength(100)]
+        public string? Name { get; set; }
+       
+        [Phone(ErrorMessage = "Invalid Phone number")]
+        [MaxLength(18)]
+        public string? PhoneNumber { get; set; }
+
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
+        [MaxLength(50)]
+        public string? Email { get; set; }
 
         [Required]
         [ForeignKey("Table")]
