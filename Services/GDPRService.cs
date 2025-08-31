@@ -33,12 +33,11 @@ namespace resturangApi.Services
         {
             
             //every 24 hours check for data to delete
-            //simulate 24 hours with 1 minute for testing
             // just to try and see how/if i can get this to work
-            //say the timer ticks every  minute but we want to check every 24 hours
+          
             _currentTime = _currentTime.AddMinutes(1);
 
-            if (_currentTime.Minute != _lastChecked.Minute) //change to Day for 24 hour check
+            if (_currentTime.Day != _lastChecked.Day) //change to Day for 24 hour check
             {
                 CheckForDataToDelete().Wait();
                 _lastChecked = _currentTime;
@@ -79,7 +78,7 @@ namespace resturangApi.Services
                 {
                   
                    if( booking.CustomerId_FK != null) 
-                        continue; //if customerID is null skip to next becouse they are registered
+                        continue; //if customerID is not null skip to next becouse they are registered
 
                     if (booking.Name.Contains("Anonymized"))
                         continue; //booking already anonymized
