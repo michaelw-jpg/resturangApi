@@ -10,14 +10,14 @@ namespace resturangApi.Services
      
         private DateTime _currentTime = DateTime.Now;
         private DateTime _lastChecked;
-        private readonly IBookingService _bookingService;
-        private readonly IGenericItemService _genericItemService;
+        private readonly IServiceProvider _serviceProvider;
 
-        public GDPRService(IBookingService bookingService, IGenericItemService genericItemService)
+        public GDPRService(IServiceProvider serviceProvider)
         {
-            _bookingService = bookingService;
+            
             _lastChecked = _currentTime;
-            _genericItemService = genericItemService;
+            _serviceProvider = serviceProvider;
+            
         }
 
          protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,8 +43,7 @@ namespace resturangApi.Services
                 CheckForDataToDelete().Wait();
                 _lastChecked = _currentTime;
             }
-            //when currentTime hits a new day do service check
-            //call method to check for data to delete
+           
         }
 
         private async Task CheckForDataToDelete()
@@ -52,19 +51,24 @@ namespace resturangApi.Services
             // Logic to check and delete data older than a certain period
             // This is a placeholder for actual implementation
             Console.WriteLine("Checking for data to delete as per GDPR regulations...");
+            using var scope = _serviceProvider.CreateScope();
+            var bookingService = scope.ServiceProvider.GetRequiredService<IBookingService>();
+            var genericItemService = scope.ServiceProvider.GetRequiredService<IGenericItemService>();
 
             var cutoffDateDelete = _currentTime.AddMonths(-6); // Example: delete data older than 6 months
             var cutoffDateAnonymize = _currentTime.AddMonths(-3); // Example: anonymize data older than 3 months
 
-            var bookingsToDelete = await _bookingService.GetOldBookingsForGDPR(cutoffDateDelete);
+            var bookingsToDelete = await bookingService.GetOldBookingsForGDPR(cutoffDateDelete);
 
-            var bookingsToAnonymize = await _bookingService.GetOldBookingsForGDPR(cutoffDateAnonymize);
+            var bookingsToAnonymize = await bookingService.GetOldBookingsForGDPR(cutoffDateAnonymize);
+
+
 
             if (bookingsToDelete.Any())
             {
                 foreach (var booking in bookingsToDelete)
                 {
-                    await _genericItemService.DeleteItem<Booking>(booking.BookingId);
+                    await genericItemService.DeleteItem<Booking>(booking.BookingId);
                     Console.WriteLine($"Deleted booking with ID: {booking.BookingId}");
                 }
             }
@@ -74,14 +78,17 @@ namespace resturangApi.Services
                 foreach (var booking in bookingsToAnonymize)
                 {
                   
-                   if( booking.CustomerId_FK == null) 
+                   if( booking.CustomerId_FK != null) 
                         continue; //if customerID is null skip to next becouse they are registered
+
+                    if (booking.Name.Contains("Anonymized"))
+                        continue; //booking already anonymized
 
                     booking.Name = "Anonymized";
                     booking.PhoneNumber = "Anonymized";
+                    booking.Email = "Anonymized";
 
-                    
-                    await _genericItemService.UpdateItem<Booking, Booking>(booking.BookingId, booking);
+                    await genericItemService.UpdateItem<Booking, Booking>(booking.BookingId, booking);
                     Console.WriteLine($"Anonymized booking with ID: {booking.BookingId}");
                 }
             }

@@ -43,6 +43,15 @@ namespace resturangApi.Data
                     ImageUrl = "https://example.com/images/caesar-salad.jpg"
                 });
 
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    UserId = new Guid(),
+                    Name = "admin",
+                    PasswordHash = "9A0DEEADB7A880BC314CA2F3C7FF1A25EDC4B1B62FAE7743FDFC95F514314ECD.976DFD14270865CD5E53DE94E856F97E",
+
+                });
+
             modelBuilder.Entity<Table>().HasData(
                 new Table
                 {
