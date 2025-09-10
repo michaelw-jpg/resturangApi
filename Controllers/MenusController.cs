@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace resturangApi.Controllers
 {
-    [Authorize]
+    
     [Route("api/[controller]")]
     [ApiController]
     public class menusController : ControllerBase
